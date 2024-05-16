@@ -1,0 +1,15 @@
+[package]
+name = "unarj-rs"
+version = "0.1.0"
+edition = "2021"
+description = "Library for handling & extracting arj archives."
+authors = ["Mike Krüger <mkrueger@posteo.de>"]
+homepage = "https://github.com/mkrueger/unarj-rs"
+repository = "https://github.com/mkrueger/unarj-rs"
+license = "MIT"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+crc32fast = "1.4.0"
+delharc = "0.6.1"

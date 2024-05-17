@@ -38,8 +38,8 @@ impl<T: Read + Seek> ArjArchieve<T> {
     pub fn read(&mut self, header: &LocalFileHeader) -> io::Result<Vec<u8>> {
         let mut compressed_buffer = vec![0; header.compressed_size as usize];
         self.reader.read_exact(&mut compressed_buffer)?;
-        match header.compression_method {
-            CompressionMethod::Stored => Ok(compressed_buffer),
+        let uncompressed = match header.compression_method {
+            CompressionMethod::Stored => compressed_buffer,
             CompressionMethod::CompressedMost
             | CompressionMethod::Compressed
             | CompressionMethod::CompressedFaster => {
@@ -49,20 +49,36 @@ impl<T: Read + Seek> ArjArchieve<T> {
                 );
                 let mut decompressed_buffer = vec![0; header.original_size as usize];
                 decoder.fill_buffer(&mut decompressed_buffer)?;
-                Ok(decompressed_buffer)
+                decompressed_buffer
             }
             CompressionMethod::CompressedFastest => {
-                decode_fastest(compressed_buffer.as_slice(), header.original_size as usize)
+                decode_fastest(compressed_buffer.as_slice(), header.original_size as usize)?
             }
             CompressionMethod::NoDataNoCrc
             | CompressionMethod::NoData
-            | CompressionMethod::Unknown(_) => Err(io::Error::new(
+            | CompressionMethod::Unknown(_) => {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    format!(
+                        "Unsupported compression method {:?}",
+                        header.compression_method
+                    ),
+                ))
+            }
+        };
+
+        if uncompressed.len() != header.original_size as usize {
+            return Err(io::Error::new(
                 io::ErrorKind::InvalidData,
-                format!(
-                    "Unsupported compression method {:?}",
-                    header.compression_method
-                ),
-            )),
+                "Decompressed size does not match the original size",
+            ));
+        }
+
+        let checksum = crc32fast::hash(&uncompressed);
+        if checksum != header.original_crc32 {
+            Err(io::Error::new(io::ErrorKind::InvalidData, "CRC32 mismatch"))
+        } else {
+            Ok(uncompressed)
         }
     }
 

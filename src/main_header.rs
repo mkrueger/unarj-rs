@@ -1,5 +1,5 @@
 #[repr(u8)]
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum HostOS {
     MsDos = 0,
     PrimOS = 1,
@@ -14,7 +14,7 @@ pub enum HostOS {
     Win95 = 10,
     Win32 = 11,
 
-    Unknown(u8)
+    Unknown(u8),
 }
 
 impl From<u8> for HostOS {
@@ -32,7 +32,7 @@ impl From<u8> for HostOS {
             9 => HostOS::VaxVMS,
             10 => HostOS::Win95,
             11 => HostOS::Win32,
-            _ => HostOS::Unknown(value)
+            _ => HostOS::Unknown(value),
         }
     }
 }
@@ -45,8 +45,8 @@ pub struct MainHeader {
     pub flags: u8,
     pub security_version: u8,
     pub file_type: u8,
-  
-    pub date_time_created: u32,
+
+    pub creation_date_time: u32,
     pub compr_size: u32,
     pub archive_size: u32,
     /// file position
@@ -58,14 +58,12 @@ pub struct MainHeader {
     pub arj_protection_factor: u8,
     pub flags2: u8,
     pub name: String,
-    pub comment: String
+    pub comment: String,
 }
-
+const FIRST_HDR_SIZE: u8 = 34;
 impl MainHeader {
-
-    pub fn load_from(header_bytes: &[u8]) -> Self {
-        let mut header_bytes =  &header_bytes[1..];
-
+    pub fn load_from(mut header_bytes: &[u8]) -> Self {
+        convert_u8!(header_size, header_bytes);
         convert_u8!(archiver_version_number, header_bytes);
         convert_u8!(min_version_to_extract, header_bytes);
         convert_u8!(host_os, header_bytes);
@@ -73,7 +71,7 @@ impl MainHeader {
         convert_u8!(security_version, header_bytes);
         convert_u8!(file_type, header_bytes);
         skip!(header_bytes, 1);
-        convert_u32!(date_time_created, header_bytes);
+        convert_u32!(creation_date_time, header_bytes);
         convert_u32!(compr_size, header_bytes);
         convert_u32!(archive_size, header_bytes);
         convert_u32!(security_envelope, header_bytes);
@@ -83,20 +81,19 @@ impl MainHeader {
         convert_u8!(encryption_version, header_bytes);
         convert_u8!(last_chapter, header_bytes);
 
-        let arj_protection_factor = 0;
-        let flags2 = 0;
-        /* TODO: Extra data - when exactly?
-        
-        convert_u8!(arj_protection_factor2, header_bytes);
-        convert_u8!(arj_flags22, header_bytes);
-        arj_protection_factor = arj_protection_factor2;
-        arj_flags2 = arj_flags22;
-        skip!(header_bytes, 2);
-        */
+        let mut arj_protection_factor = 0;
+        let mut flags2 = 0;
+
+        if header_size >= FIRST_HDR_SIZE {
+            convert_u8!(arj_protection_factor2, header_bytes);
+            convert_u8!(arj_flags22, header_bytes);
+            arj_protection_factor = arj_protection_factor2;
+            flags2 = arj_flags22;
+            skip!(header_bytes, 2);
+        }
 
         convert_string!(name, header_bytes);
         convert_string!(comment, header_bytes);
-
         Self {
             archiver_version_number,
             min_version_to_extract,
@@ -104,7 +101,7 @@ impl MainHeader {
             flags,
             security_version,
             file_type,
-            date_time_created,
+            creation_date_time,
             compr_size,
             archive_size,
             security_envelope,
@@ -115,7 +112,7 @@ impl MainHeader {
             arj_protection_factor,
             flags2,
             name,
-            comment
+            comment,
         }
     }
 

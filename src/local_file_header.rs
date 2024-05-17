@@ -1,7 +1,7 @@
 use crate::main_header::HostOS;
 
 #[repr(u8)]
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum FileType {
     Binary = 0,
     Text7Bit = 1,
@@ -27,7 +27,7 @@ impl From<u8> for FileType {
 }
 
 #[repr(u8)]
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum CompressionMethod {
     Stored = 0,
     CompressedMost = 1,
@@ -67,10 +67,10 @@ pub struct LocalFileHeader {
     pub compressed_size: u32,
     pub original_size: u32,
     pub original_crc32: u32,
-    
+
     pub file_spec_position: u16,
     pub file_access_mode: u16,
-    
+
     pub first_chapter: u8,
     pub last_chapter: u8,
 
@@ -85,11 +85,14 @@ pub struct LocalFileHeader {
     pub comment: String,
 }
 
-impl LocalFileHeader {
+/// Standard header size
+const STD_HDR_SIZE: u8 = 30;
+/// Minimum size of header that holds DTA/DTC
+const R9_HDR_SIZE: u8 = 46;
 
+impl LocalFileHeader {
     pub fn load_from(mut header_bytes: &[u8]) -> Option<Self> {
         convert_u8!(header_size, header_bytes);
-
         convert_u8!(archiver_version_number, header_bytes);
         convert_u8!(min_version_to_extract, header_bytes);
         convert_u8!(host_os, header_bytes);
@@ -110,21 +113,17 @@ impl LocalFileHeader {
         let mut date_time_accessed = 0;
         let mut date_time_created = 0;
         let mut original_size_even_for_volumes = 0;
-        
-        if header_size >= 33 {
+        if header_size > STD_HDR_SIZE {
             convert_u32!(extended_file_position2, header_bytes);
             extended_file_position = extended_file_position2;
-
-            if header_size >= 45 {
+            if header_size >= R9_HDR_SIZE {
                 convert_u32!(date_time_accessed2, header_bytes);
                 convert_u32!(date_time_created2, header_bytes);
                 convert_u32!(original_size_even2_for_volumes, header_bytes);
                 date_time_accessed = date_time_accessed2;
                 date_time_created = date_time_created2;
                 original_size_even_for_volumes = original_size_even2_for_volumes;
-                skip!(header_bytes, 12);
             }
-            skip!(header_bytes, 4);
         }
 
         convert_string!(name, header_bytes);

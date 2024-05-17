@@ -29,7 +29,6 @@ macro_rules! skip {
     };
 }
 
-
 macro_rules! convert_u8 {
     ( $t:ident, $x:expr ) => {
         let $t = $x[0];

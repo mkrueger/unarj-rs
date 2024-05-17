@@ -8,7 +8,10 @@ fn main() {
     println!("Name            Size            Compression");
     println!("---------------------------------------------------");
     while let Ok(Some(header)) = archieve.get_next_entry() {
-        println!("{:<15}\t{:<7}\t\t{:?}", header.name, header.original_size, header.compression_method);
+        println!(
+            "{:<15}\t{:<7}\t\t{:?}",
+            header.name, header.original_size, header.compression_method
+        );
         archieve.skip(&header).unwrap();
     }
 }

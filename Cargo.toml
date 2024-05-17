@@ -1,6 +1,6 @@
 [package]
 name = "unarj-rs"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 description = "Library for handling & extracting arj archives."
 authors = ["Mike Krüger <mkrueger@posteo.de>"]
@@ -14,3 +14,4 @@ license = "MIT"
 crc32fast = "1.4.0"
 delharc = "0.6.1"
 bitstream-io = "2.3.0"
+chrono = "0.4.38"

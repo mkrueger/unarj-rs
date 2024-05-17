@@ -1,4 +1,4 @@
-use crate::main_header::HostOS;
+use crate::{date_time::DosDateTime, main_header::HostOS};
 
 #[repr(u8)]
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -54,7 +54,6 @@ impl From<u8> for CompressionMethod {
     }
 }
 
-#[derive(Debug)]
 pub struct LocalFileHeader {
     pub archiver_version_number: u8,
     pub min_version_to_extract: u8,
@@ -63,7 +62,7 @@ pub struct LocalFileHeader {
     pub compression_method: CompressionMethod,
     pub file_type: FileType,
 
-    pub date_time_modified: u32,
+    pub date_time_modified: DosDateTime,
     pub compressed_size: u32,
     pub original_size: u32,
     pub original_crc32: u32,
@@ -76,8 +75,8 @@ pub struct LocalFileHeader {
 
     pub extended_file_position: u32,
 
-    pub date_time_accessed: u32,
-    pub date_time_created: u32,
+    pub date_time_accessed: DosDateTime,
+    pub date_time_created: DosDateTime,
 
     pub original_size_even_for_volumes: u32,
 
@@ -136,7 +135,7 @@ impl LocalFileHeader {
             arj_flags,
             compression_method: compression_method.into(),
             file_type: file_type.into(),
-            date_time_modified,
+            date_time_modified: DosDateTime::new(date_time_modified),
             compressed_size,
             original_size,
             original_crc32,
@@ -145,8 +144,8 @@ impl LocalFileHeader {
             first_chapter,
             last_chapter,
             extended_file_position,
-            date_time_accessed,
-            date_time_created,
+            date_time_accessed: DosDateTime::new(date_time_accessed),
+            date_time_created: DosDateTime::new(date_time_created),
             original_size_even_for_volumes,
             name,
             comment,

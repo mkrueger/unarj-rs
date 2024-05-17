@@ -1,3 +1,5 @@
+use crate::date_time::DosDateTime;
+
 #[repr(u8)]
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum HostOS {
@@ -37,7 +39,6 @@ impl From<u8> for HostOS {
     }
 }
 
-#[derive(Debug)]
 pub struct MainHeader {
     pub archiver_version_number: u8,
     pub min_version_to_extract: u8,
@@ -46,7 +47,7 @@ pub struct MainHeader {
     pub security_version: u8,
     pub file_type: u8,
 
-    pub creation_date_time: u32,
+    pub creation_date_time: DosDateTime,
     pub compr_size: u32,
     pub archive_size: u32,
     /// file position
@@ -101,7 +102,7 @@ impl MainHeader {
             flags,
             security_version,
             file_type,
-            creation_date_time,
+            creation_date_time: DosDateTime::new(creation_date_time),
             compr_size,
             archive_size,
             security_envelope,

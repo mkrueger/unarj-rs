@@ -3,6 +3,7 @@ use std::io::{self, Read, Seek};
 use delharc::decode::{Decoder, DecoderAny};
 
 use crate::{
+    date_time::DosDateTime,
     decode_fastest::decode_fastest,
     local_file_header::{CompressionMethod, LocalFileHeader},
     main_header::{HostOS, MainHeader},
@@ -108,7 +109,7 @@ impl<T: Read + Seek> ArjArchieve<T> {
     }
 
     /// Returns the creation date and time of the archive in DOS format.
-    pub fn get_creation_date_time(&self) -> u32 {
+    pub fn get_creation_date_time(&self) -> DosDateTime {
         self.header.creation_date_time
     }
 
